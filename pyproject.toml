@@ -1,0 +1,11 @@
+[tool.black]
+line-length = 100
+include = '\.pyi?$'
+exclude = '/(\.git|\.venv|build|dist|tests/data)/'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = ["src"]
+multi_line_output = 3
+skip = ["venv"]
