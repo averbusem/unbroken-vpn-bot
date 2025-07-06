@@ -166,3 +166,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 settings.json
+
+# Developer notes
+/notes/

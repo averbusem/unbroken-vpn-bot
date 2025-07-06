@@ -1,15 +1,27 @@
-import os
-
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from dotenv import load_dotenv
+from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.types import BotCommand
 
 from src.bot.handlers import get_handlers_router
+from src.bot.middlewares import UpdateLastMessageIdMiddleware
+from src.config import settings
 
-load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher()
+bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+storage = RedisStorage.from_url(settings.REDIS_URL)
+dp = Dispatcher(storage=storage)
+dp.message.middleware(UpdateLastMessageIdMiddleware())
+dp.callback_query.middleware(UpdateLastMessageIdMiddleware())
 dp.include_router(get_handlers_router())
+
+
+async def setup_bot():
+    await bot.set_my_commands(
+        [
+            BotCommand(command="start", description="Start bot"),
+            BotCommand(command="help", description="Help"),
+            BotCommand(command="about", description="About bot"),
+        ]
+    )
+    await bot.delete_webhook(drop_pending_updates=True)

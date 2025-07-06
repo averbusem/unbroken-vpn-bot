@@ -1,20 +1,11 @@
 import asyncio
 import logging
 
-from aiogram.types import BotCommand
-
-from src.bot import bot, dp
+from src.bot import bot, dp, setup_bot
 
 
 async def main():
-    await bot.set_my_commands(
-        [
-            BotCommand(command="start", description="Start bot"),
-            BotCommand(command="help", description="Help"),
-            BotCommand(command="about", description="About bot"),
-        ]
-    )
-    await bot.delete_webhook(drop_pending_updates=True)
+    await setup_bot()
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 
