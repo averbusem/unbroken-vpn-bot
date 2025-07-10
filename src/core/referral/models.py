@@ -35,7 +35,7 @@ class Referral(Base):
         "User", foreign_keys=[referrer_id], back_populates="sent_referrals", lazy="select"
     )
     referred: Mapped["User"] = relationship(
-        "User", foreign_keys=[referred_id], back_populates="received_referrals", lazy="select"
+        "User", foreign_keys=[referred_id], back_populates="received_referral", lazy="select"
     )
 
     def __repr__(self) -> str:

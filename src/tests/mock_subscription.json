@@ -1,0 +1,67 @@
+[
+    {
+      "_comment": "активировал пробную подписку",
+      "id": 1,
+      "user_id": 2,
+      "tariff_id": 1,
+      "vpn_key": "vpn-trial-bob-1",
+      "outline_key_id": "outline-id-1",
+      "created_at": "2025-07-08T15:40:00Z",
+      "end_date": "2025-07-15T15:40:00Z",
+      "is_active": true,
+      "cnt_payments": 0,
+      "updated_at": null
+    },
+    {
+      "_comment": "активная подписка на месяц (куплена 5 июля)",
+      "id": 2,
+      "user_id": 3,
+      "tariff_id": 2,
+      "vpn_key": "vpn-month-dima-2",
+      "outline_key_id": "outline-id-2",
+      "created_at": "2025-06-03T08:50:00Z",
+      "end_date": "2025-08-04T09:00:00Z",
+      "is_active": true,
+      "cnt_payments": 1,
+      "updated_at":  "2025-07-05T09:00:00Z"
+    },
+    {
+      "_comment": "активная подписка на месяц, не использовал пробную",
+      "id": 3,
+      "user_id": 4,
+      "tariff_id": 2,
+      "vpn_key": "vpn-month-petr-3",
+      "outline_key_id": "outline-id-3",
+      "created_at": "2025-07-01T12:00:00Z",
+      "end_date": "2025-07-31T12:00:00Z",
+      "is_active": true,
+      "cnt_payments": 1,
+      "updated_at": null
+    },
+    {
+      "_comment": "активна подписка на 3 месяца",
+      "id": 4,
+      "user_id": 5,
+      "tariff_id": 3,
+      "vpn_key": "vpn-3m-artem-4",
+      "outline_key_id": "outline-id-4",
+      "created_at": "2025-06-05T11:30:00Z",
+      "end_date": "2025-10-10T14:20:00Z",
+      "is_active": true,
+      "cnt_payments": 1,
+      "updated_at": "2025-07-12T14:20:00Z"
+    },
+    {
+      "_comment": "пробная + месячный тариф, подписка завершена (ivan)",
+      "id": 5,
+      "user_id": 6,
+      "tariff_id": 2,
+      "vpn_key": "",
+      "outline_key_id": "",
+      "created_at": "2025-05-01T08:05:00Z",
+      "end_date": "2025-06-07T09:00:00Z",
+      "is_active": false,
+      "cnt_payments": 1,
+      "updated_at": "2025-05-08T09:00:00Z"
+    }
+]

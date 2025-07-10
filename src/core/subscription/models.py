@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.db.database import Base
 
 if TYPE_CHECKING:
-    # Эти импорты нужны только для проверки типов (flake8, mypy),
+    # Эти импорты нужны только для проверки типов (flake8),
     # в рантайме они не будут выполняться
     from src.core.tariff.models import Tariff
     from src.core.user.models import User
@@ -29,6 +29,7 @@ class Subscription(Base):
         Integer, ForeignKey("tariffs.id", ondelete="RESTRICT"), nullable=False
     )
     vpn_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    outline_key_id: Mapped[str] = mapped_column(String(64), nullable=True)
     end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     is_active: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False, index=True, server_default=sa.true()

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.db.database import Base
 
 if TYPE_CHECKING:
-    # Эти импорты нужны только для проверки типов (flake8, mypy),
+    # Эти импорты нужны только для проверки типов (flake8),
     # в рантайме они не будут выполняться
     from src.core.subscription.models import Subscription
 

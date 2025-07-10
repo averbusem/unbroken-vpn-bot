@@ -2,13 +2,14 @@ import secrets
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, DateTime, String, func
+import sqlalchemy as sa
+from sqlalchemy import BigInteger, Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.database import Base
 
 if TYPE_CHECKING:
-    # Эти импорты нужны только для проверки типов (flake8, mypy),
+    # Эти импорты нужны только для проверки типов (flake8),
     # в рантайме они не будут выполняться
     from src.core.referral.models import Referral
     from src.core.subscription.models import Subscription
@@ -19,8 +20,19 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str] = mapped_column(String(40), nullable=False, unique=True, index=True)
+    # TODO а если secrets.token_urlsafe(16) сгенерирует уже занятый код, то нужно будет сгенерировать заново  # noqa
     referral_code: Mapped[str] = mapped_column(
         String(32), unique=True, nullable=False, default=lambda: secrets.token_urlsafe(16)
+    )
+    trial_used: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=sa.false(),
+    )
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=sa.false(),
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.timezone("utc", func.now()), nullable=False
