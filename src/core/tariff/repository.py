@@ -43,11 +43,11 @@ class TariffRepository:
         price: float | None = None,
         duration_days: int | None = None
     ) -> Tariff:
-        if name:
+        if name is not None:
             tariff.name = name
-        if price:
+        if price is not None:
             tariff.price = price
-        if duration_days:
+        if duration_days is not None:
             tariff.duration_days = duration_days
         self.session.add(tariff)
         await self.session.flush()

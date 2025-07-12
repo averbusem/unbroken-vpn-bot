@@ -1,11 +1,13 @@
 import logging
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from src.bot.keyboards import main_menu_kb
 from src.core.referral.repository import ReferralRepository
+from src.core.subscription.jobs import run_all_deactivations, run_all_notifications
 from src.core.subscription.repository import SubscriptionRepository
 from src.core.subscription.service import SubscriptionService
 from src.core.user.repository import UserRepository
@@ -43,6 +45,7 @@ async def process_referral(session, user, ref_code, message):
     referral = await ref_repo.create(referrer.id, user.id)
     sub_service = SubscriptionService(session)
     await sub_service.apply_referral_bonus(referral)
+
     await message.answer(
         "Поздравляем! Вы получили реферальный бонус на подписку.",
     )
@@ -50,12 +53,11 @@ async def process_referral(session, user, ref_code, message):
 
 @router.message(CommandStart())
 async def start_cmd(message: Message, command: CommandStart, state: FSMContext):
-    # Сброс состояния
     await state.clear()
 
     async with session_factory() as session:
         user_repo = UserRepository(session)
-        # Получаем или создаём пользователя
+        # Создание пользователя
         user = await user_repo.get_by_id(message.from_user.id)
         if not user:
             user = await user_repo.create(
@@ -67,10 +69,21 @@ async def start_cmd(message: Message, command: CommandStart, state: FSMContext):
         if ref_code:
             await process_referral(session, user, ref_code, message)
 
-        # Сохраняем изменения один раз
         await session.commit()
 
-    # Переходим в главное меню
+    # Переход в главное меню
     await message.answer(
         "Привет! Я бот для управления подпиской VPN. Выберите действие:",
+        reply_markup=main_menu_kb(user.trial_used),
     )
+
+
+@router.message(F.text == "test")
+async def test_jobs_handler(message: Message):
+    """
+    Тестовый хендлер: запускает все задачи уведомлений и деактивации
+    по префиксам notify_ и deactivate_.
+    """
+    await run_all_notifications()
+    await run_all_deactivations()
+    await message.answer("✅ Все тестовые задачи выполнены!")

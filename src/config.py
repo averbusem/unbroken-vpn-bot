@@ -55,7 +55,6 @@ class Settings(BaseSettings):
     OUTLINE_CERT_SHA256: str = ""
 
     PAYMASTER_MERCHANT_ID: str = ""
-    PAYMASTER_SECRET_KEY: str = ""
 
 
 settings = Settings()

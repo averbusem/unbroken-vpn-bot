@@ -7,7 +7,7 @@ def main_menu_kb(user_trial_used: bool):
     if not user_trial_used:
         builder.add(InlineKeyboardButton(text="Пробный период", callback_data="trial"))
     builder.add(InlineKeyboardButton(text="Купить/продлить", callback_data="select_tariff"))
-    builder.add(InlineKeyboardButton(text="Подписка", callback_data="subscription"))
+    builder.add(InlineKeyboardButton(text="Подписка", callback_data="subscription_info"))
     builder.add(InlineKeyboardButton(text="Реферальная программа", callback_data="ref_program"))
     builder.add(InlineKeyboardButton(text="Помощь", callback_data="help"))
     builder.adjust(1)
@@ -28,14 +28,6 @@ def trial_confirmation_kb():
     return builder.as_markup()
 
 
-# def tariff_selection_kb():
-#     builder = InlineKeyboardBuilder()
-#     builder.add(InlineKeyboardButton(text="1 месяц - 100₽", callback_data="tariff_1"))
-#     builder.add(InlineKeyboardButton(text="3 месяца - 250₽", callback_data="tariff_3"))
-#     builder.adjust(1)
-#     return builder.as_markup()
-
-
 def tariff_selection_kb(tariffs: list):
     builder = InlineKeyboardBuilder()
     for tariff in tariffs:
@@ -44,6 +36,7 @@ def tariff_selection_kb(tariffs: list):
         text = f"{tariff.duration_days} дней - {tariff.price}₽"
         callback_data = f"tariff_{tariff.id}"
         builder.add(InlineKeyboardButton(text=text, callback_data=callback_data))
+    builder.add(InlineKeyboardButton(text="Назад", callback_data="back_to_main"))
     builder.adjust(1)
     return builder.as_markup()
 
@@ -53,4 +46,4 @@ def subscription_info_kb():
     builder.add(InlineKeyboardButton(text="Купить/продлить", callback_data="select_tariff"))
     builder.add(InlineKeyboardButton(text="Назад", callback_data="back_to_main"))
     builder.adjust(2)
-    return builder.as_markup(resize_keyboard=True)
+    return builder.as_markup()

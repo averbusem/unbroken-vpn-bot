@@ -4,12 +4,16 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.referral.models import Referral
+from src.core.subscription.jobs import (
+    reschedule_deactivation,
+    reschedule_notification,
+    schedule_deactivation,
+    schedule_notification,
+)
 from src.core.subscription.models import Subscription
 from src.core.subscription.repository import SubscriptionRepository
-from src.core.subscription.scheduler import scheduler
 from src.core.tariff.repository import TariffRepository
 from src.core.user.repository import UserRepository
-from src.db.database import session_factory
 from src.outline.service import OutlineManager
 
 
@@ -19,7 +23,6 @@ class SubscriptionService:
         self.user_repo = UserRepository(session)
         self.tariff_repo = TariffRepository(session)
         self.outline = OutlineManager()
-        self.scheduler = scheduler
 
     async def create_subscription(
         self,
@@ -50,8 +53,8 @@ class SubscriptionService:
         )
 
         # Планируем деактивацию
-        self.schedule_deactivation(subscription.id, end_date)
-        self.schedule_notification(subscription.id, end_date - timedelta(days=3))
+        schedule_deactivation(subscription.id, end_date)
+        schedule_notification(subscription.id, end_date - timedelta(days=3))
 
         return subscription, outline_key["accessUrl"]
 
@@ -88,68 +91,45 @@ class SubscriptionService:
             )
             key = outline_key["accessUrl"]
         # Перепланируем деактивацию (даже если ее не было)
-        self.reschedule_deactivation(subscription.id, new_end_date)
-        self.reschedule_notification(subscription.id, new_end_date - timedelta(days=3))
+        reschedule_deactivation(subscription.id, new_end_date)
+        reschedule_notification(subscription.id, new_end_date - timedelta(days=3))
         await self.sub_repo.increment_payments(subscription)
 
         return subscription, key
 
-    def schedule_deactivation(self, sub_id: int, end_date: datetime):
-        job_id = f"deactivate_{sub_id}"
-        self.scheduler.add_job(
-            self.deactivate_subscription, "date", run_date=end_date, args=[sub_id], id=job_id
-        )
-
-    def schedule_notification(self, sub_id: int, notify_date: datetime):
-        job_id = f"notify_{sub_id}"
-        self.scheduler.add_job(
-            self.send_notification, "date", run_date=notify_date, args=[sub_id], id=job_id
-        )
-
-    def reschedule_deactivation(self, sub_id: int, new_end_date: datetime):
-        job_id = f"deactivate_{sub_id}"
-        if self.scheduler.get_job(job_id):
-            self.scheduler.remove_job(job_id)
-        self.schedule_deactivation(sub_id, new_end_date)
-
-    def reschedule_notification(self, sub_id: int, new_notify_date: datetime):
-        job_id = f"notify_{sub_id}"
-        if self.scheduler.get_job(job_id):
-            self.scheduler.remove_job(job_id)
-        self.schedule_notification(sub_id, new_notify_date)
-
     async def deactivate_subscription(self, sub_id: int):
-        async with session_factory() as session:
-            repo = SubscriptionRepository(session)
-            sub = await repo.get_by_id(sub_id)
-            if sub and sub.is_active:
-                # Удаляем ключ в Outline
-                if sub.outline_key_id:
-                    try:
-                        # TODO await self.outline.delete_key(str(sub.outline_key_id))
-                        pass
-                    except Exception as e:
-                        logging.error(f"Error deleting Outline key: {str(e)}")
+        """
+        Деактивирует подписку: работает через переданную в конструкторе сессию.
+        """
+        sub = await self.sub_repo.get_by_id(sub_id)
+        if sub and sub.is_active:
+            # Удаляем ключ в Outline
+            if sub.outline_key_id:
+                try:
+                    # TODO await self.outline.delete_key(str(sub.outline_key_id))
+                    pass
+                except Exception as e:
+                    logging.error(f"Error deleting Outline key: {e}")
 
-                # Деактивируем подписку и очищаем ключи
-                await repo.update(sub, vpn_key="", outline_key_id="", is_active=False)
-                await session.commit()
+            # Деактивируем подписку и очищаем ключи
+            await self.sub_repo.update(sub, vpn_key="", outline_key_id="", is_active=False)
 
     async def send_notification(self, sub_id: int):
+        """
+        Отправляет уведомление о скором окончании подписки.
+        """
         from src.bot import bot
 
-        async with session_factory() as session:
-            repo = SubscriptionRepository(session)
-            sub = await repo.get_by_id(sub_id)
-            if sub and sub.is_active:
-                try:
-                    await bot.send_message(
-                        sub.user_id,
-                        "Ваша подписка закончится через 3 дня. "
-                        "Продлите ее, чтобы оставаться на связи!",
-                    )
-                except Exception as e:
-                    logging.error(f"Failed to send notification: {e}")
+        sub = await self.sub_repo.get_by_id(sub_id)
+        if sub and sub.is_active:
+            try:
+                await bot.send_message(
+                    sub.user_id,
+                    "Ваша подписка закончится через 3 дня\n"
+                    "Продлите ее, чтобы оставаться на связи!",
+                )
+            except Exception as e:
+                logging.error(f"Failed to send notification: {e}")
 
     async def activate_trial(self, user_id: int) -> tuple[Subscription, str]:
         user = await self.user_repo.get_by_id(user_id)
@@ -165,8 +145,6 @@ class SubscriptionService:
 
         sub, key = await self.create_subscription(user_id, trial_tariff.id)
         await self.user_repo.mark_trial_used(user)
-        self.schedule_deactivation(sub.id, sub.end_date)
-        self.schedule_notification(sub.id, sub.end_date - timedelta(days=3))
         return sub, key
 
     async def apply_referral_bonus(self, referral: Referral) -> None:
@@ -200,15 +178,15 @@ class SubscriptionService:
             )
             await self.user_repo.mark_trial_used(referral.referred)
             # Планируем задачи для подписки приглашённого
-            self.reschedule_deactivation(new_sub.id, end_date)
-            self.reschedule_notification(new_sub.id, end_date - timedelta(days=3))
+            reschedule_deactivation(new_sub.id, end_date)
+            reschedule_notification(new_sub.id, end_date - timedelta(days=3))
             logging.info(f"Applied 14-day bonus to referred user {referral.referred_id}")
 
         except Exception as e:
             logging.error(f"Error applying bonus to referred user {referral.referred_id}: {e}")
 
         # === Пригласивший ===
-        # TODO а что делать если у пригласившего нет подписки
+        # TODO не обновляется поле updated_at
         try:
             referrer_sub = await self.sub_repo.get_by_user_id(referral.referrer_id)
             if referrer_sub:
@@ -234,8 +212,8 @@ class SubscriptionService:
                     end_date=end_date,
                 )
             # Планируем задачи для подписки пригласившего
-            self.reschedule_deactivation(referrer_sub.id, end_date)
-            self.reschedule_notification(referrer_sub.id, end_date - timedelta(days=3))
+            reschedule_deactivation(referrer_sub.id, end_date)
+            reschedule_notification(referrer_sub.id, end_date - timedelta(days=3))
             logging.info(f"Applied 7-day bonus to referrer user {referral.referrer_id}")
 
         except Exception as e:

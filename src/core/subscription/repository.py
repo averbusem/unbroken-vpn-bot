@@ -66,13 +66,13 @@ class SubscriptionRepository:
         end_date: datetime | None = None,
         is_active: bool | None = None,
     ) -> None:
-        if vpn_key:
+        if vpn_key is not None:
             subscription.vpn_key = vpn_key
-        if outline_key_id:
+        if outline_key_id is not None:
             subscription.outline_key_id = outline_key_id
-        if end_date:
+        if end_date is not None:
             subscription.end_date = end_date
-        if is_active:
+        if is_active is not None:
             subscription.is_active = is_active
 
         self.session.add(subscription)
