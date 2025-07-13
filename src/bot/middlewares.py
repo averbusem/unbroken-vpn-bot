@@ -2,6 +2,28 @@ import logging
 
 from aiogram import BaseMiddleware, types
 from aiogram.fsm.context import FSMContext
+from aiogram.types import TelegramObject
+
+from src.db.database import session_factory
+
+
+class DBSessionMiddleware(BaseMiddleware):
+    """
+    Открывает AsyncSession перед обработкой и коммитит/роллбекает после.
+    Сессия доступна в хендлерах через параметр `session: AsyncSession`.
+    """
+
+    async def __call__(self, handler, event: TelegramObject, data: dict):
+        async with session_factory() as session:
+            data["session"] = session
+            try:
+                result = await handler(event, data)
+                await session.commit()
+                return result
+            # TODO as e?
+            except Exception as e:
+                await session.rollback()
+                logging.exception(e)
 
 
 class UpdateLastMessageIdMiddleware(BaseMiddleware):

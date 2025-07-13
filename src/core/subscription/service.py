@@ -143,7 +143,11 @@ class SubscriptionService:
         if not trial_tariff:
             raise ValueError("Trial tariff not configured")
 
-        sub, key = await self.create_subscription(user_id, trial_tariff.id)
+        existing_sub = await self.sub_repo.get_by_user_id(user_id)
+        if existing_sub:
+            sub, key = await self.extend_subscription(existing_sub, trial_tariff.id)
+        else:
+            sub, key = await self.create_subscription(user_id, trial_tariff.id)
         await self.user_repo.mark_trial_used(user)
         return sub, key
 

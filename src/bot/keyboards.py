@@ -47,3 +47,9 @@ def subscription_info_kb():
     builder.add(InlineKeyboardButton(text="Назад", callback_data="back_to_main"))
     builder.adjust(2)
     return builder.as_markup()
+
+
+def referral_info_kb():
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Назад", callback_data="back_to_main"))
+    return builder.as_markup()
