@@ -19,7 +19,7 @@ class Tariff(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(16), nullable=False)
     duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
-    price: Mapped[Numeric] = mapped_column(Numeric(10, 2), nullable=False)
+    price: Mapped[Numeric] = mapped_column(Numeric(7, 2), nullable=False)
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,

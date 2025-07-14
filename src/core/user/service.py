@@ -1,11 +1,17 @@
 import logging
+import secrets
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.referral.repository import ReferralRepository
 from src.core.subscription.service import SubscriptionService
 from src.core.user.repository import UserRepository
-from src.exceptions import ReferralAlreadyExist, SelfReferralException, SubscriptionAlreadyExist
+from src.exceptions import (
+    ReferralAlreadyExist,
+    SelfReferralException,
+    ServiceException,
+    SubscriptionAlreadyExist,
+)
 
 
 class UserService:
@@ -25,7 +31,8 @@ class UserService:
         try:
             user = await self.user_repo.get_by_id(user_id)
             if not user:
-                user = await self.user_repo.create(user_id, username)
+                code = await self._generate_unique_referral_code()
+                user = await self.user_repo.create(user_id, username, code)
 
             bonus_applied = False
             if ref_code:
@@ -54,3 +61,12 @@ class UserService:
         referral = await self.ref_repo.create(referrer.id, user_id)
         await self.sub_service.apply_referral_bonus(referral)
         return True
+
+    async def _generate_unique_referral_code(self) -> str:
+        for _ in range(5):
+            code = secrets.token_urlsafe(6)  # 8 символов
+            exists = await self.user_repo.get_by_referral_code(code)
+            if not exists:
+                return code
+        # после 5 неудачных попыток
+        raise ServiceException("Не удалось сгенерировать уникальный реферальный код")

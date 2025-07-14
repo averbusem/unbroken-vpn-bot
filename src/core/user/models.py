@@ -1,4 +1,3 @@
-import secrets
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
@@ -19,11 +18,8 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    username: Mapped[str] = mapped_column(String(40), nullable=False, unique=True, index=True)
-    # TODO а если secrets.token_urlsafe(16) сгенерирует уже занятый код, то нужно будет сгенерировать заново  # noqa
-    referral_code: Mapped[str] = mapped_column(
-        String(32), unique=True, nullable=False, default=lambda: secrets.token_urlsafe(16)
-    )
+    username: Mapped[str] = mapped_column(String(32), nullable=False, unique=True, index=True)
+    referral_code: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
     trial_used: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,

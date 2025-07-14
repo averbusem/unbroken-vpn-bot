@@ -14,6 +14,7 @@ from src.core.subscription.models import Subscription
 from src.core.subscription.repository import SubscriptionRepository
 from src.core.tariff.repository import TariffRepository
 from src.core.user.repository import UserRepository
+from src.exceptions import SubscriptionNotFoundException
 from src.outline.service import OutlineManager
 
 
@@ -113,6 +114,33 @@ class SubscriptionService:
 
             # Деактивируем подписку и очищаем ключи
             await self.sub_repo.update(sub, vpn_key="", outline_key_id="", is_active=False)
+
+    async def get_subscription_info(self, user_id: int) -> dict:
+        """
+        Получить информацию о подписке пользователя.
+        Возвращает словарь с полями:
+          - end_date: datetime окончания подписки в UTC
+          - vpn_key: строка
+          - device_limit: int
+        Выбрасывает SubscriptionNotFoundException, если подписки нет.
+        """
+        sub = await self.sub_repo.get_by_user_id(user_id)
+        if not sub:
+
+            raise SubscriptionNotFoundException(f"Subscription for user {user_id} not found")
+        end_date_utc = sub.end_date.astimezone(timezone.utc)
+        info = {
+            "end_date": end_date_utc,
+            "vpn_key": sub.vpn_key,
+            "device_limit": 3,
+        }
+        logging.debug(
+            "Retrieved subscription info for user %s: end_date=%s, key=%s",
+            user_id,
+            end_date_utc.isoformat(),
+            sub.vpn_key,
+        )
+        return info
 
     async def send_notification(self, sub_id: int):
         """

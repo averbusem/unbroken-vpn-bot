@@ -20,8 +20,8 @@ class UserRepository:
         result = await self.session.execute(select(User).where(User.referral_code == code))
         return result.scalars().first()
 
-    async def create(self, id: int, username: str) -> User:
-        user = User(id=id, username=username)
+    async def create(self, id: int, username: str, ref_code: str) -> User:
+        user = User(id=id, username=username, referral_code=ref_code)
         self.session.add(user)
         await self.session.flush()
         return user

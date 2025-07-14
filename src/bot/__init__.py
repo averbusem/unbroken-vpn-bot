@@ -24,7 +24,7 @@ dp.include_router(get_handlers_router())
 async def setup_bot():
     await bot.set_my_commands(
         [
-            BotCommand(command="start", description="Start bot"),
+            BotCommand(command="start", description="Перезапустить бота"),
             BotCommand(command="help", description="Help"),
             BotCommand(command="about", description="About bot"),
         ]

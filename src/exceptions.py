@@ -37,13 +37,7 @@ class UserNotFoundException(ServiceException):
     pass
 
 
-class SubscriptionException(ServiceException):
-    """Ошибка при работе с подпиской"""
-
-    pass
-
-
-class PaymentException(ServiceException):
-    """Ошибка при оплате или создании платежа"""
+class SubscriptionNotFoundException(ServiceException):
+    """Подписка не найдена для пользователя."""
 
     pass

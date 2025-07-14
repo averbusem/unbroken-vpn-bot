@@ -59,6 +59,8 @@ async def start_cmd(
 
 
 # from src.core.subscription.jobs import run_all_deactivations, run_all_notifications
+#
+#
 # @router.message(F.text == "test")
 # async def test_jobs_handler(message: Message):
 #     """

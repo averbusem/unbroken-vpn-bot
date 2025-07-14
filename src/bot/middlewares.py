@@ -21,9 +21,9 @@ class DBSessionMiddleware(BaseMiddleware):
                 await session.commit()
                 return result
             # TODO as e?
-            except Exception as e:
+            except Exception:
                 await session.rollback()
-                logging.exception(e)
+                logging.exception("Error in handler %s for event %s", handler.__name__, event)
 
 
 class UpdateLastMessageIdMiddleware(BaseMiddleware):

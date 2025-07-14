@@ -41,6 +41,15 @@ def tariff_selection_kb(tariffs: list):
     return builder.as_markup()
 
 
+# def create_payment_kb():
+#     """Возврат к выбору тарифов из состояния оплаты"""
+#     builder = InlineKeyboardBuilder()
+#     builder.add(InlineKeyboardButton(text="💳 Оплатить", pay=True))
+#     builder.add(InlineKeyboardButton(text="Назад", callback_data="back_to_select_tariffs"))
+#     builder.adjust(2)
+#     return builder.as_markup()
+
+
 def subscription_info_kb():
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Купить/продлить", callback_data="select_tariff"))
