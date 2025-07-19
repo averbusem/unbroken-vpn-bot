@@ -51,9 +51,14 @@ async def start_cmd(
             "Ошибка, уже передали разработчикам", reply_markup=back_to_main_kb()
         )
 
-    text = "Привет! Я бот для управления подпиской VPN"
+    text = "Привет! Я бот для управления подпиской VPN\n"
+
     if bonus:
-        text += "\nПоздравляем! Вы получили реферальный бонус"
+        await message.answer(text)
+        return await message.answer(
+            "Поздравляем! Вы получили 14 дней бесплатной подписки",
+            reply_markup=main_menu_kb(user.trial_used),
+        )
 
     return await message.answer(text, reply_markup=main_menu_kb(user.trial_used))
 

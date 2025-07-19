@@ -26,7 +26,6 @@ async def setup_bot():
         [
             BotCommand(command="start", description="Перезапустить бота"),
             BotCommand(command="help", description="Help"),
-            BotCommand(command="about", description="About bot"),
         ]
     )
     await bot.delete_webhook(drop_pending_updates=True)

@@ -41,3 +41,9 @@ class SubscriptionNotFoundException(ServiceException):
     """Подписка не найдена для пользователя."""
 
     pass
+
+
+class SubscriptionNotActiveException(ServiceException):
+    """Подписка не найдена для пользователя."""
+
+    pass

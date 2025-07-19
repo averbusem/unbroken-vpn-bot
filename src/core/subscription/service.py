@@ -14,7 +14,7 @@ from src.core.subscription.models import Subscription
 from src.core.subscription.repository import SubscriptionRepository
 from src.core.tariff.repository import TariffRepository
 from src.core.user.repository import UserRepository
-from src.exceptions import SubscriptionNotFoundException
+from src.exceptions import SubscriptionNotActiveException, SubscriptionNotFoundException
 from src.outline.service import OutlineManager
 
 
@@ -35,12 +35,11 @@ class SubscriptionService:
         if not tariff:
             raise ValueError("Tariff not found")
 
-        # Создаем ключ в Outline
-        # TODO outline_key = await self.outline.create_key(name=f"user_{user_id}")
-        outline_key = {
-            "id": f"temp_outline_key_id_{user_id}",
-            "accessUrl": f"temp_vpn_key_{user_id}",
-        }
+        outline_key = await self.outline.create_key(name=f"user_{user_id}")
+        # outline_key = {
+        #     "id": f"temp_outline_key_id_{user_id}",
+        #     "accessUrl": f"temp_vpn_key_{user_id}",
+        # }
         # Рассчитываем дату окончания
         end_date = datetime.now(timezone.utc) + timedelta(days=tariff.duration_days)
 
@@ -74,12 +73,11 @@ class SubscriptionService:
             await self.sub_repo.update_end_date(subscription, new_end_date)
             key = subscription.vpn_key
         else:
-            # Для неактивной подписки создаем новый ключ
-            # TODO outline_key = await self.outline.create_key(name=f"user_{subscription.user_id}")
-            outline_key = {
-                "id": f"temp_outline_key_id_{subscription.user_id}",
-                "accessUrl": f"temp_vpn_key_{subscription.user_id}",
-            }
+            outline_key = await self.outline.create_key(name=f"user_{subscription.user_id}")
+            # outline_key = {
+            #     "id": f"temp_outline_key_id_{subscription.user_id}",
+            #     "accessUrl": f"temp_vpn_key_{subscription.user_id}",
+            # }
             new_end_date = now + timedelta(days=tariff.duration_days)
 
             # Обновляем подписку
@@ -107,7 +105,7 @@ class SubscriptionService:
             # Удаляем ключ в Outline
             if sub.outline_key_id:
                 try:
-                    # TODO await self.outline.delete_key(str(sub.outline_key_id))
+                    await self.outline.delete_key(str(sub.outline_key_id))
                     pass
                 except Exception as e:
                     logging.error(f"Error deleting Outline key: {e}")
@@ -124,10 +122,12 @@ class SubscriptionService:
           - device_limit: int
         Выбрасывает SubscriptionNotFoundException, если подписки нет.
         """
+        # TODO если подписка не активна то тоже ошибку  выбросить
         sub = await self.sub_repo.get_by_user_id(user_id)
         if not sub:
-
             raise SubscriptionNotFoundException(f"Subscription for user {user_id} not found")
+        if not sub.is_active:
+            raise SubscriptionNotActiveException(f"Subscription for user {user_id} not active")
         end_date_utc = sub.end_date.astimezone(timezone.utc)
         info = {
             "end_date": end_date_utc,
@@ -196,11 +196,11 @@ class SubscriptionService:
             referral_bonus_days = referral.bonus_days
 
             end_date = now + timedelta(days=trial_tariff.duration_days + referral_bonus_days)
-            # TODO outline_key = await self.outline.create_key(name=f"user_{subscription.user_id}")
-            outline_key = {
-                "id": f"temp_outline_key_id_{referral.referrer_id}",
-                "accessUrl": f"temp_vpn_key_{referral.referrer_id}",
-            }
+            outline_key = await self.outline.create_key(name=f"user_{referral.referred_id}")
+            # outline_key = {
+            #     "id": f"temp_outline_key_id_{referral.referrer_id}",
+            #     "accessUrl": f"temp_vpn_key_{referral.referrer_id}",
+            # }
             new_sub = await self.sub_repo.create(
                 user_id=referral.referred_id,
                 tariff_id=trial_tariff.id,
@@ -231,11 +231,13 @@ class SubscriptionService:
                 referral_bonus_days = referral.bonus_days
                 end_date = now + timedelta(days=trial.duration_days + referral_bonus_days)
 
-                # TODO outline_key = await self.outline.create_key(name=f"user_{subscription.user_id}")  # noqa
-                outline_key = {
-                    "id": f"temp_outline_key_id_{referral.referrer_id}",
-                    "accessUrl": f"temp_vpn_key_{referral.referrer_id}",
-                }
+                outline_key = await self.outline.create_key(
+                    name=f"user_{referral.referrer_id}"
+                )  # noqa
+                # outline_key = {
+                #     "id": f"temp_outline_key_id_{referral.referrer_id}",
+                #     "accessUrl": f"temp_vpn_key_{referral.referrer_id}",
+                # }
                 await self.sub_repo.create(
                     user_id=referral.referrer_id,
                     tariff_id=trial.id,
@@ -243,6 +245,7 @@ class SubscriptionService:
                     outline_key_id=outline_key["id"],
                     end_date=end_date,
                 )
+                await self.user_repo.mark_trial_used(referral.referrer)
             # Планируем задачи для подписки пригласившего
             reschedule_deactivation(referrer_sub.id, end_date)
             reschedule_notification(referrer_sub.id, end_date - timedelta(days=3))

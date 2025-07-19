@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 @router.callback_query(F.data == "ref_program")
 async def referral_info(callback: CallbackQuery, session: AsyncSession):
-    # Получаем username бота
     bot_username = (await callback.bot.get_me()).username
     ref_service = ReferralService(session)
 
@@ -33,7 +32,7 @@ async def referral_info(callback: CallbackQuery, session: AsyncSession):
         "Приглашайте друзей и получайте бонусы!\n\n"
         f"🔗 Ваша реферальная ссылка: <code>{info['ref_link']}</code>\n\n"
         "📊 Ваша статистика:\n"
-        f"Всего рефералов: {info['total']}\n"
+        f"Всего приглашенных: {info['total']}\n"
     )
 
     if info["referred_usernames"]:

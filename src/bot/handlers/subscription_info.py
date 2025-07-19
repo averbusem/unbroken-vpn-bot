@@ -9,7 +9,7 @@ from src.bot.keyboards import subscription_info_kb
 from src.bot.states import UserStates
 from src.bot.utils.datetime_formatter import format_utc_to_moscow
 from src.core.subscription.service import SubscriptionService
-from src.exceptions import SubscriptionNotFoundException
+from src.exceptions import SubscriptionNotActiveException, SubscriptionNotFoundException
 
 router = Router()
 
@@ -25,7 +25,15 @@ async def subscription_info(callback: CallbackQuery, state: FSMContext, session:
     except SubscriptionNotFoundException:
         logging.info("User %s tried to view subscription_info but has none", user_id)
         return await callback.message.edit_text(
-            "❗ У вас пока нет подписки.\n" "Вы можете оформить подписку через меню ниже.",
+            "У вас пока нет подписки.\n" "Вы можете оформить подписку через меню ниже.",
+            reply_markup=subscription_info_kb(),
+        )
+    except SubscriptionNotActiveException:
+        logging.info(
+            "User %s tried to view subscription_info but has expired subscription", user_id
+        )
+        return await callback.message.edit_text(
+            "Ваша подписка просрочена.\n" "Вы можете продлить подписку через меню ниже.",
             reply_markup=subscription_info_kb(),
         )
     except Exception:

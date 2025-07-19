@@ -28,8 +28,8 @@ class Subscription(Base):
     tariff_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("tariffs.id", ondelete="RESTRICT"), nullable=False
     )
-    vpn_key: Mapped[str] = mapped_column(String(80), nullable=False)
-    outline_key_id: Mapped[str] = mapped_column(String(64), nullable=True)
+    vpn_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    outline_key_id: Mapped[str] = mapped_column(String(100), nullable=True)
     end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     is_active: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False, index=True, server_default=sa.true()

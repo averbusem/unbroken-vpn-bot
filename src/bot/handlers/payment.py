@@ -78,17 +78,17 @@ async def successful_payment(message: Message, state: FSMContext, session: Async
     existing = await sub_repo.get_by_user_id(user_id)
 
     if existing:
-        subscription, key = await sub_service.extend_subscription(existing, tariff_id)
+        sub, key = await sub_service.extend_subscription(existing, tariff_id)
         action = "продлена"
     else:
-        subscription, key = await sub_service.create_subscription(user_id, tariff_id)
+        sub, key = await sub_service.create_subscription(user_id, tariff_id)
         action = "оформлена"
 
     # Ответ пользователю
-    end_datetime = format_utc_to_moscow(subscription.end_date)
+    end_datetime = format_utc_to_moscow(sub.end_date)
     return await message.answer(
         f"✅ Ваша подписка {action} успешно!\n"
-        f"🔑 Ваш VPN-ключ: <code>{key}</code>\n"
-        f"📆 Действительна до: {end_datetime}",
+        f"📆 Окончание: {end_datetime}\n"
+        f"🔑 Ваш VPN-ключ: <code>{key}</code>",
         reply_markup=back_to_main_kb(),
     )
