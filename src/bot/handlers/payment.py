@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.bot.keyboards import back_to_main_kb, tariff_selection_kb
 from src.bot.states import UserStates
 from src.bot.utils.datetime_formatter import format_utc_to_moscow
-from src.bot.utils.decorators import remove_last_keyboard
 from src.config import settings
 from src.core.payment.service import PaymentService
 from src.core.tariff.repository import TariffRepository
@@ -26,7 +25,6 @@ async def select_tariff(callback: CallbackQuery, state: FSMContext, session: Asy
 
 
 @router.callback_query(F.data.startswith("tariff_"), UserStates.CREATE_PAYMENT)
-@remove_last_keyboard
 async def create_payment(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     user_id = callback.from_user.id
     tariff_id = int(callback.data.split("_")[1])
@@ -61,7 +59,6 @@ async def pre_checkout(query: PreCheckoutQuery):
 
 
 @router.message(F.content_type == "successful_payment", UserStates.SUCCESSFUL_PAYMENT)
-@remove_last_keyboard
 async def successful_payment(message: Message, state: FSMContext, session: AsyncSession):
     """
     После успешной оплаты создаём или продлеваем подписку.

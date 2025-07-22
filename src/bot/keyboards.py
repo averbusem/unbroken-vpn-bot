@@ -45,7 +45,7 @@ def tariff_selection_kb(tariffs: list):
         text = f"{tariff.duration_days} дней - {tariff.price}₽"
         callback_data = f"tariff_{tariff.id}"
         builder.add(InlineKeyboardButton(text=text, callback_data=callback_data))
-    builder.add(InlineKeyboardButton(text="Назад", callback_data="back_to_main"))
+    builder.add(InlineKeyboardButton(text="Назад", callback_data="subscription_info"))
     builder.adjust(1)
     return builder.as_markup()
 

@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.bot.keyboards import back_to_main_kb, help_kb
 from src.bot.texts import INSTRUCTION_TEXT
-from src.bot.utils.decorators import remove_last_keyboard
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -16,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 @router.message(Command("help"))
 @router.callback_query(F.data == "help")
-@remove_last_keyboard
 async def show_help_menu(
     event: Message | CallbackQuery,
     state: FSMContext,

@@ -7,7 +7,6 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.bot.keyboards import back_to_main_kb, main_menu_kb
-from src.bot.utils.decorators import remove_last_keyboard
 from src.core.user.service import UserService
 from src.exceptions import ReferralAlreadyExist, SelfReferralException, SubscriptionAlreadyExist
 
@@ -16,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 @router.message(CommandStart())
-@remove_last_keyboard
 async def start_cmd(
     message: Message, state: FSMContext, command: CommandStart, session: AsyncSession
 ):

@@ -5,15 +5,15 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 
 from src.bot.handlers import get_handlers_router
-from src.bot.middlewares import DBSessionMiddleware, UpdateLastMessageIdMiddleware
+from src.bot.middlewares import DBSessionMiddleware, RemoveLastKeyboardMiddleware
 from src.config import settings
 
 bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 storage = RedisStorage.from_url(settings.REDIS_URL)
 dp = Dispatcher(storage=storage)
 
-dp.message.middleware(UpdateLastMessageIdMiddleware())
-dp.callback_query.middleware(UpdateLastMessageIdMiddleware())
+dp.message.middleware(RemoveLastKeyboardMiddleware())
+dp.callback_query.middleware(RemoveLastKeyboardMiddleware())
 
 dp.message.middleware(DBSessionMiddleware())
 dp.callback_query.middleware(DBSessionMiddleware())
