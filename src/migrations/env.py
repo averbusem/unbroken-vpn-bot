@@ -4,10 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from src.config import settings
-from src.core.referral.models import Referral  # noqa: F401
-from src.core.subscription.models import Subscription  # noqa: F401
-from src.core.tariff.models import Tariff  # noqa: F401
-from src.core.user.models import User  # noqa: F401
+from src.core import models  # noqa: F401
 from src.db.database import Base
 
 config = context.config

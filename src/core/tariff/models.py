@@ -9,6 +9,7 @@ from src.db.database import Base
 if TYPE_CHECKING:
     # Эти импорты нужны только для проверки типов (flake8),
     # в рантайме они не будут выполняться
+    from src.core.payment.models import Payment
     from src.core.subscription.models import Subscription
 
 
@@ -31,6 +32,9 @@ class Tariff(Base):
     # Relationships
     subscriptions: Mapped[List["Subscription"]] = relationship(
         "Subscription", back_populates="tariff", cascade="all, delete-orphan", lazy="select"
+    )
+    payments: Mapped[List["Payment"]] = relationship(
+        back_populates="tariff", cascade="all, delete-orphan", lazy="selectin"
     )
 
     def __repr__(self) -> str:

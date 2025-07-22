@@ -36,14 +36,6 @@ async def subscription_info(callback: CallbackQuery, state: FSMContext, session:
             "Ваша подписка просрочена.\n" "Вы можете продлить подписку через меню ниже.",
             reply_markup=subscription_info_kb(),
         )
-    except Exception:
-        logging.exception(
-            "Unexpected error in subscription_info handler for user %s",
-            user_id,
-        )
-        return await callback.message.edit_text(
-            "⚠️ Не удалось загрузить информацию о подписке.", reply_markup=subscription_info_kb()
-        )
 
     end_datetime = format_utc_to_moscow(info["end_date"])
     text = (

@@ -23,10 +23,6 @@ async def referral_info(callback: CallbackQuery, session: AsyncSession):
         return await callback.message.answer(
             "Пользователь не найден", reply_markup=back_to_main_kb()
         )
-    except Exception:
-        return await callback.message.answer(
-            "Ошибка при загрузке статистики", reply_markup=back_to_main_kb()
-        )
 
     text = (
         "Приглашайте друзей и получайте бонусы!\n\n"

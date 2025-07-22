@@ -12,7 +12,6 @@ else:
     DATABASE_PARAMS = {}
 
 engine = create_async_engine(url=DATABASE_URL, **DATABASE_PARAMS)
-# TODO оставить ли expire_on_commit=False
 session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
 

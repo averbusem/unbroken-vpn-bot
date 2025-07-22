@@ -10,11 +10,13 @@ def main_menu_kb(user_trial_used: bool):
     builder.add(InlineKeyboardButton(text="🤝 Пригласить друга", callback_data="ref_program"))
     builder.add(InlineKeyboardButton(text="ℹ️ Помощь", callback_data="help"))
 
-    from src.bot.handlers.privacy_policy import page
+    from src.bot.handlers.privacy_policy import PRIVACY_POLICY_URL
 
     builder.add(
         InlineKeyboardButton(
-            text="📄 Пользовательское соглашение", callback_data="privacy_policy", url=page["url"]
+            text="📄 Пользовательское соглашение",
+            callback_data="privacy_policy",
+            url=PRIVACY_POLICY_URL,
         )
     )
     builder.adjust(1)

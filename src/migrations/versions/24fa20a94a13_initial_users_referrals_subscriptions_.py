@@ -1,8 +1,8 @@
-"""Initial users, referral_program, subscriptions, tariffs
+"""Initial users, referrals, subscriptions, tariffs, payments
 
-Revision ID: c23b8d78bd65
+Revision ID: 24fa20a94a13
 Revises:
-Create Date: 2025-07-06 14:04:49.929334
+Create Date: 2025-07-22 19:29:32.102908
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "c23b8d78bd65"
+revision: str = "24fa20a94a13"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=16), nullable=False),
         sa.Column("duration_days", sa.Integer(), nullable=False),
-        sa.Column("price", sa.Numeric(precision=10, scale=2), nullable=False),
+        sa.Column("price", sa.Numeric(precision=7, scale=2), nullable=False),
         sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name", name="uq_tariff_name"),
@@ -35,8 +35,10 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("username", sa.String(length=40), nullable=False),
-        sa.Column("referral_code", sa.String(length=32), nullable=False),
+        sa.Column("username", sa.String(length=32), nullable=False),
+        sa.Column("referral_code", sa.String(length=10), nullable=False),
+        sa.Column("trial_used", sa.Boolean(), server_default=sa.text("false"), nullable=False),
+        sa.Column("is_admin", sa.Boolean(), server_default=sa.text("false"), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -47,6 +49,33 @@ def upgrade() -> None:
         sa.UniqueConstraint("referral_code"),
     )
     op.create_index(op.f("ix_users_username"), "users", ["username"], unique=True)
+    op.create_table(
+        "payments",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.BigInteger(), nullable=False),
+        sa.Column("tariff_id", sa.Integer(), nullable=False),
+        sa.Column("amount", sa.Numeric(precision=7, scale=2), nullable=False),
+        sa.Column(
+            "status",
+            sa.Enum("PENDING", "SUCCESS", "FAILED", "CANCELED", name="paymentstatus"),
+            nullable=False,
+        ),
+        sa.Column("invoice_payload", sa.String(), nullable=False),
+        sa.Column("telegram_payment_charge_id", sa.String(length=128), nullable=True),
+        sa.Column("provider_payment_charge_id", sa.String(length=128), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("timezone('utc', now())"),
+            nullable=False,
+        ),
+        sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
+        sa.ForeignKeyConstraint(["tariff_id"], ["tariffs.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("provider_payment_charge_id"),
+        sa.UniqueConstraint("telegram_payment_charge_id"),
+    )
     op.create_table(
         "referrals",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -73,7 +102,8 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column("tariff_id", sa.Integer(), nullable=False),
-        sa.Column("vpn_key", sa.String(length=64), nullable=False),
+        sa.Column("vpn_key", sa.String(length=100), nullable=False),
+        sa.Column("outline_key_id", sa.String(length=100), nullable=True),
         sa.Column("end_date", sa.DateTime(timezone=True), nullable=False),
         sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("cnt_payments", sa.Integer(), nullable=False),
@@ -89,32 +119,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id"),
     )
-
-    # ### установка функции и триггера для автоматического обновления поля updated_at ###
-    # fmt: off
-    # flake8: noqa
-    op.execute(
-        """
-        CREATE OR REPLACE FUNCTION update_updated_at_column()
-        RETURNS TRIGGER AS $$
-        BEGIN
-            NEW.updated_at = timezone('utc', now());
-            RETURN NEW;
-        END;
-        $$ language 'plpgsql';
-        """
-    )  # Создание функции для обновления updated_at
-    op.execute(
-        """
-        CREATE TRIGGER set_updated_at
-        BEFORE UPDATE ON subscriptions
-        FOR EACH ROW
-        EXECUTE PROCEDURE update_updated_at_column();
-        """
-    )
-    # fmt: on
-    # Создание триггера set_updated_at
-
     op.create_index("idx_sub_end_date", "subscriptions", ["end_date"], unique=False)
     op.create_index("idx_sub_user_active", "subscriptions", ["user_id", "is_active"], unique=False)
     op.create_index(
@@ -125,10 +129,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    # ### команды для удаления триггера и функции ###
-    op.execute("DROP TRIGGER IF EXISTS set_updated_at ON subscriptions;")  # удаляем триггер
-    op.execute("DROP FUNCTION IF EXISTS update_updated_at_column();")  # удаляем функцию
-    # ### конец удаления триггера ###
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_index(op.f("ix_subscriptions_is_active"), table_name="subscriptions")
     op.drop_index("idx_sub_user_active", table_name="subscriptions")
@@ -136,6 +136,7 @@ def downgrade() -> None:
     op.drop_table("subscriptions")
     op.drop_index("idx_referrer_referred", table_name="referrals")
     op.drop_table("referrals")
+    op.drop_table("payments")
     op.drop_index(op.f("ix_users_username"), table_name="users")
     op.drop_table("users")
     op.drop_index(op.f("ix_tariffs_is_active"), table_name="tariffs")

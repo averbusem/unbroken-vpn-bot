@@ -46,11 +46,6 @@ async def start_cmd(
             "Вы уже использовали реферальную ссылку", reply_markup=back_to_main_kb()
         )
 
-    except Exception:
-        return await message.answer(
-            "Ошибка, уже передали разработчикам", reply_markup=back_to_main_kb()
-        )
-
     text = "Привет! Я бот для управления подпиской VPN\n"
 
     if bonus:

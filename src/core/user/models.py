@@ -10,6 +10,7 @@ from src.db.database import Base
 if TYPE_CHECKING:
     # Эти импорты нужны только для проверки типов (flake8),
     # в рантайме они не будут выполняться
+    from src.core.payment.models import Payment
     from src.core.referral.models import Referral
     from src.core.subscription.models import Subscription
 
@@ -46,6 +47,9 @@ class User(Base):
     # One-to-One: пользователь может быть приглашён только одним
     received_referral: Mapped[Optional["Referral"]] = relationship(
         back_populates="referred", foreign_keys="Referral.referred_id", uselist=False, lazy="select"
+    )
+    payments: Mapped[List["Payment"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
     )
 
     @property

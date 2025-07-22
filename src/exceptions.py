@@ -47,3 +47,15 @@ class SubscriptionNotActiveException(ServiceException):
     """Подписка не найдена для пользователя."""
 
     pass
+
+
+class PaymentException(Exception):
+    pass
+
+
+class TariffNotFoundException(PaymentException):
+    pass
+
+
+class PaymentNotFoundException(PaymentException):
+    pass
