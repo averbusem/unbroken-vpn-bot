@@ -6,7 +6,6 @@ from src.bot import bot, dp, setup_bot
 from src.core.subscription.scheduler import scheduler
 
 
-# TODO московское время
 async def main():
     scheduler.start()
 
@@ -17,5 +16,3 @@ async def main():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
-
-# TODO НЕЛЬЗЯ ОТКАТЫВАТЬ СОЗДАНИЕ ПЛАТЕЖА

@@ -28,6 +28,21 @@ services:
     ports:
       - "6379:6379"
 
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vpn_bot
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app
+    # Выполнит миграции и запустит бота через polling
+    command: sh -c "alembic upgrade head && python -m src.main"
+
 volumes:
   db_data:
   redis_data:

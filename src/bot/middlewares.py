@@ -15,7 +15,6 @@ async def _remove_keyboard(bot: Bot, chat_id: int, message_id: int) -> None:
             chat_id=chat_id, message_id=message_id, reply_markup=None
         )
     except TelegramBadRequest as e:
-        # если клавиатура уже удалена — игнорируем
         if "message is not modified" in str(e):
             logging.debug(f"Keyboard already removed: {chat_id}:{message_id}")
             return
@@ -27,9 +26,6 @@ async def _remove_keyboard(bot: Bot, chat_id: int, message_id: int) -> None:
 class DBSessionMiddleware(BaseMiddleware):
     """
     Открывает AsyncSession перед обработкой и коммитит/роллбекает после.
-    Сессия доступна в хендлерах через параметр `session: AsyncSession`.
-    При любой ошибке бот отправляет пользователю единое уведомление,
-    корректно работая и для Message, и для CallbackQuery.
     """
 
     async def __call__(self, handler, event: TelegramObject, data: dict):
@@ -41,7 +37,6 @@ class DBSessionMiddleware(BaseMiddleware):
                 return result
 
             except Exception:
-                # Откатываем
                 await session.rollback()
                 logging.exception("Error in middleware %s for event %s", handler.__name__, event)
 
