@@ -1,5 +1,3 @@
-import logging
-
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +7,6 @@ from src.core.referral.service import ReferralService
 from src.exceptions import UserNotFoundException
 
 router = Router()
-logger = logging.getLogger(__name__)
 
 
 @router.callback_query(F.data == "ref_program")

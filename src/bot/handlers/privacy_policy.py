@@ -21,7 +21,6 @@ content_hash = hashlib.sha256(PRIVACY_POLICY_CONTENT.encode("utf-8")).hexdigest(
 telegraph = Telegraph()
 _ = telegraph.create_account(short_name="UnbrokenVPNBot")
 
-# Проверяем, есть ли ранее сохранённые данные о странице
 if STORAGE_PATH.exists():
     with STORAGE_PATH.open("r", encoding="utf-8") as f:
         data = json.load(f)

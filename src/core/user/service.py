@@ -7,11 +7,14 @@ from src.core.referral.repository import ReferralRepository
 from src.core.subscription.service import SubscriptionService
 from src.core.user.repository import UserRepository
 from src.exceptions import (
-    ReferralAlreadyExist,
+    ReferralAlreadyExistException,
+    ReferralCodeGenerationException,
     SelfReferralException,
     ServiceException,
-    SubscriptionAlreadyExist,
+    SubscriptionAlreadyExistException,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserService:
@@ -39,24 +42,40 @@ class UserService:
                 bonus_applied = await self._apply_referral(user_id, ref_code)
             return user, bonus_applied
 
-        except (SubscriptionAlreadyExist, SelfReferralException, ReferralAlreadyExist) as e:
-            logging.info("Referral exception for user %s: %s", user_id, e)
+        except (
+            SubscriptionAlreadyExistException,
+            SelfReferralException,
+            ReferralAlreadyExistException,
+        ):
             raise
-
+        # чтобы избежать двойное логирование
+        # т.к. сервис self.sub_service.apply_referral_bonus(referral)
+        # так же при неожиданной ошибке выкинет ServiceException
+        except (ServiceException, ReferralCodeGenerationException):
+            raise
         except Exception as e:
-            logging.exception("Unhandled exception in UserService.start for user %s", user_id, e)
-            raise
+            logger.exception(f"Unhandled exception in UserService.start for user {user_id}: {e}")
+            raise ServiceException(f"Failed to start user {user_id}: {str(e)}")
 
     async def _apply_referral(self, user_id: int, ref_code: str) -> bool:
-        if await self.sub_service.sub_repo.get_by_user_id(user_id):
-            raise SubscriptionAlreadyExist(f"User {user_id} already has subscription")
+        existing_sub = await self.sub_service.sub_repo.get_by_user_id(user_id)
+        if existing_sub:
+            logger.info(
+                f"Referral blocked - user {user_id} already has subscription id={existing_sub.id}"
+            )
+            raise SubscriptionAlreadyExistException(f"User {user_id} already has subscription")
 
         referrer = await self.user_repo.get_by_referral_code(ref_code)
         if not referrer or referrer.id == user_id:
+            logger.info(f"Referral code {ref_code} not found for user {user_id}")
             raise SelfReferralException(f"Invalid referral code for user_id: {user_id}")
 
-        if await self.ref_repo.get_by_referred_id(user_id):
-            raise ReferralAlreadyExist(f"User {user_id} already has referral")
+        existing_referral = await self.ref_repo.get_by_referred_id(user_id)
+        if existing_referral:
+            logger.info(
+                f"User {user_id} already used ref code referrer: {existing_referral.referrer_id}"
+            )
+            raise ReferralAlreadyExistException(f"User {user_id} already used referral code")
 
         referral = await self.ref_repo.create(referrer.id, user_id)
         await self.sub_service.apply_referral_bonus(referral)
@@ -69,4 +88,7 @@ class UserService:
             if not exists:
                 return code
         # после 5 неудачных попыток
-        raise ServiceException("Не удалось сгенерировать уникальный реферальный код")
+        logger.warning("Failed to generate unique referral code after 5 attempts")
+        raise ReferralCodeGenerationException(
+            "Failed to generate unique referral code after 5 attempts"
+        )

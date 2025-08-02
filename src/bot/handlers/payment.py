@@ -54,7 +54,7 @@ async def create_payment(callback: CallbackQuery, state: FSMContext, session: As
 
 @router.pre_checkout_query(lambda q: True)
 async def pre_checkout(query: PreCheckoutQuery):
-    # Подтверждаем переходим к оплате
+    # Подтверждаем, переходим к оплате
     await query.answer(ok=True)
 
 
@@ -79,7 +79,6 @@ async def successful_payment(message: Message, state: FSMContext, session: Async
             reply_markup=back_to_main_kb(),
         )
 
-    # Ответ пользователю
     end_datetime = format_utc_to_moscow(end_datetime_utc)
     return await message.answer(
         f"✅ Ваша подписка {action} успешно!\n"

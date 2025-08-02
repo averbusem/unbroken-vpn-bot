@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 class PaymentService:
     def __init__(self, session: AsyncSession):
         self.session = session
-        # self.pay_repo = PaymentRepository(session)
         self.tariff_repo = TariffRepository(session)
         self.sub_service = SubscriptionService(session)
 
@@ -34,7 +33,7 @@ class PaymentService:
             amount = int(tariff.price)
             payload = f"{user_id}_{tariff_id}_{int(time())}"
 
-            # Создание отдельной сессии и коммит чтобы точно создать потенциальный платеж
+            # Создание отдельной сессии и коммита чтобы точно создать потенциальный платеж
             async with session_factory() as pay_sess:
                 pay_repo = PaymentRepository(pay_sess)
                 payment = await pay_repo.create(
@@ -42,7 +41,7 @@ class PaymentService:
                 )
                 await pay_sess.commit()
                 logger.info(
-                    "Create payment %s for user %s: tariff=%s amount=%s",
+                    "Create invoice %s for user %s: tariff=%s amount=%s",
                     payment.id,
                     user_id,
                     tariff_id,

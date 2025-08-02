@@ -1,5 +1,3 @@
-import logging
-
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -10,7 +8,6 @@ from src.bot.keyboards import back_to_main_kb, help_kb
 from src.bot.texts import INSTRUCTION_TEXT
 
 router = Router()
-logger = logging.getLogger(__name__)
 
 
 @router.message(Command("help"))
@@ -25,7 +22,6 @@ async def show_help_menu(
         message = event.message
     else:
         message = event
-
     return await message.answer("Выберите раздел помощи:", reply_markup=help_kb())
 
 
@@ -43,7 +39,6 @@ async def send_instruction(
 async def send_support(
     callback: CallbackQuery,
 ):
-    # TODO: уточните контакт поддержки (email, Telegram-канал или группа)
     support_text = (
         "Для поддержки обратитесь: \n"
         "• По электронной почте: support@example.com\n"

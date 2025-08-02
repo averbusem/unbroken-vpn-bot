@@ -1,5 +1,3 @@
-import logging
-
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
@@ -8,10 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.bot.keyboards import back_to_main_kb, main_menu_kb
 from src.core.user.service import UserService
-from src.exceptions import ReferralAlreadyExist, SelfReferralException, SubscriptionAlreadyExist
+from src.exceptions import (
+    ReferralAlreadyExistException,
+    SelfReferralException,
+    SubscriptionAlreadyExistException,
+)
 
 router = Router()
-logger = logging.getLogger(__name__)
 
 
 @router.message(CommandStart())
@@ -27,29 +28,29 @@ async def start_cmd(
             username=message.from_user.username or "",
             ref_code=ref_code,
         )
-    except SubscriptionAlreadyExist:
+    except SubscriptionAlreadyExistException:
         return await message.answer(
-            "У вас уже есть подписка, повторный реферальный бонус недоступен",
+            "У вас уже есть подписка, повторный реферальный бонус недоступен.",
             reply_markup=back_to_main_kb(),
         )
 
     except SelfReferralException:
         return await message.answer(
-            "Вы не можете использовать свою собственную реферальную ссылку",
+            "Вы не можете использовать свою собственную реферальную ссылку.",
             reply_markup=back_to_main_kb(),
         )
 
-    except ReferralAlreadyExist:
+    except ReferralAlreadyExistException:
         return await message.answer(
-            "Вы уже использовали реферальную ссылку", reply_markup=back_to_main_kb()
+            "Вы уже использовали реферальную ссылку.", reply_markup=back_to_main_kb()
         )
 
-    text = "Привет! Я бот для управления подпиской VPN\n"
+    text = "Привет! Я бот для управления подпиской VPN.\n"
 
     if bonus:
         await message.answer(text)
         return await message.answer(
-            "Поздравляем! Вы получили 14 дней бесплатной подписки",
+            "Поздравляем! Вы получили 14 дней бесплатной подписки.",
             reply_markup=main_menu_kb(user.trial_used),
         )
 
@@ -57,7 +58,7 @@ async def start_cmd(
 
 
 # from src.core.subscription.jobs import run_all_deactivations, run_all_notifications
-#
+# from aiogram import F
 #
 # @router.message(F.text == "test")
 # async def test_jobs_handler(message: Message):

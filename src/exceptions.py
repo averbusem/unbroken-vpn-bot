@@ -2,54 +2,86 @@
 
 
 class ServiceException(Exception):
-    """Базовый класс ошибок сервисного слоя"""
+    """Базовый класс всех ошибок сервисного слоя."""
 
     pass
 
 
-class ReferralException(Exception):
-    """Ошибка при обработке реферального кода"""
+# === Referral domain ===
+
+
+class ReferralException(ServiceException):
+    """Ошибки, для ReferralService."""
 
     pass
 
 
-class SubscriptionAlreadyExist(ReferralException):
-    """Пользователь уже зарегистрирован"""
+class UserNotFoundException(ReferralException):
+    """Пользователь не найден."""
 
     pass
 
 
-class SelfReferralException(ReferralException):
-    """Реферальный код не может быть использован для регистрации пользователя самого себя"""
+# === User domain ===
+
+
+class UserException(ServiceException):
+    """Ошибки для UserService."""
 
     pass
 
 
-class ReferralAlreadyExist(ReferralException):
-    """Пользователь уже зарегистрирован с таким реферальным кодом"""
+class SelfReferralException(UserException):
+    """Реферальный код не может быть использован для регистрации пользователя самого себя."""
 
     pass
 
 
-class UserNotFoundException(ServiceException):
-    """Пользователь не найден"""
+class SubscriptionAlreadyExistException(UserException):
+    """Пользователь уже зарегистрирован."""
 
     pass
 
 
-class SubscriptionNotFoundException(ServiceException):
+class ReferralAlreadyExistException(UserException):
+    """Пользователь уже зарегистрирован с таким реферальным кодом."""
+
+    pass
+
+
+class ReferralCodeGenerationException(UserException):
+    """Все попытки создания кода неудачны."""
+
+    pass
+
+
+# === Subscription domain ===
+
+
+class SubscriptionException(ServiceException):
+    """Ошибки для SubscriptionService."""
+
+    pass
+
+
+class SubscriptionNotActiveException(SubscriptionException):
+    """Подписка не активна у пользователя."""
+
+    pass
+
+
+class SubscriptionNotFoundException(SubscriptionException):
     """Подписка не найдена для пользователя."""
 
     pass
 
 
-class SubscriptionNotActiveException(ServiceException):
-    """Подписка не найдена для пользователя."""
-
-    pass
+# === Payment domain ===
 
 
-class PaymentException(Exception):
+class PaymentException(ServiceException):
+    """Ошибки для PaymentService."""
+
     pass
 
 
