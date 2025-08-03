@@ -24,10 +24,12 @@ class DBSessionMiddleware(BaseMiddleware):
                 result = await handler(event, data)
                 await session.commit()
                 return result
+            # Неожиданные ошибки сервисов
             except ServiceException:
                 await session.rollback()
                 # Отправка пользователю сообщение об ошибке
                 return await _send_error_message(event)
+            # Неожиданные ошибки хендлеров
             except Exception as e:
                 await session.rollback()
                 logger.exception(

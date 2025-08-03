@@ -86,29 +86,12 @@ class PaymentService:
 
             user_id = payment.user_id
             tariff_id = payment.tariff_id
-            existing = await self.sub_service.sub_repo.get_by_user_id(user_id)
 
-            if existing:
-                sub, key = await self.sub_service.extend_subscription(existing, tariff_id)
-                action = "продлена"
-                end_datetime = sub.end_date
-                logger.info(
-                    "Subscription extended: id=%s user=%s payment=%s",
-                    sub.id,
-                    user_id,
-                    payment.id,
-                )
-            else:
-                sub, key = await self.sub_service.create_subscription(user_id, tariff_id)
-                action = "оформлена"
-                end_datetime = sub.end_date
-                logger.info(
-                    "Subscription created: id=%s user=%s payment=%s",
-                    sub.id,
-                    user_id,
-                    payment.id,
-                )
+            sub, key = await self.sub_service.create_or_extend_subscription(user_id, tariff_id)
 
-            return action, end_datetime, key
+            existing_sub = await self.sub_service.sub_repo.get_by_user_id(user_id)
+            action = "продлена" if existing_sub else "создана"
+
+            return action, sub.end_date, key
         except (PaymentNotFoundException,):
             raise

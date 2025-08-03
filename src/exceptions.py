@@ -1,93 +1,96 @@
-# src/exception.py
-
-
 class ServiceException(Exception):
     """Базовый класс всех ошибок сервисного слоя."""
 
     pass
 
 
-# === Referral domain ===
-
-
-class ReferralException(ServiceException):
-    """Ошибки, для ReferralService."""
+# === Технические ошибки сервисов (неожиданные) ===
+class UserException(ServiceException):
+    """Неожиданные технические ошибки UserService."""
 
     pass
 
 
-class UserNotFoundException(ReferralException):
+class SubscriptionException(ServiceException):
+    """Неожиданные технические ошибки SubscriptionService."""
+
+    pass
+
+
+class ReferralException(ServiceException):
+    """Неожиданные технические ошибки ReferralService."""
+
+    pass
+
+
+class PaymentException(ServiceException):
+    """Неожиданные технические ошибки PaymentService."""
+
+    pass
+
+
+# === Бизнес-исключения (ожидаемые, обрабатываемые) ===
+class BusinessException(ServiceException):
+    """Базовый класс для бизнес-логики исключений."""
+
+    pass
+
+
+class TariffNotFoundException(BusinessException):
+    """Тариф не найден."""
+
+    pass
+
+
+class UserNotFoundException(BusinessException):
     """Пользователь не найден."""
 
     pass
 
 
-# === User domain ===
-
-
-class UserException(ServiceException):
-    """Ошибки для UserService."""
+class SelfReferralException(BusinessException):
+    """Попытка использовать собственный реферальный код."""
 
     pass
 
 
-class SelfReferralException(UserException):
-    """Реферальный код не может быть использован для регистрации пользователя самого себя."""
+class SubscriptionAlreadyExistException(BusinessException):
+    """У пользователя уже есть подписка."""
 
     pass
 
 
-class SubscriptionAlreadyExistException(UserException):
-    """Пользователь уже зарегистрирован."""
+class ReferralAlreadyExistException(BusinessException):
+    """Пользователь уже использовал реферальный код."""
 
     pass
 
 
-class ReferralAlreadyExistException(UserException):
-    """Пользователь уже зарегистрирован с таким реферальным кодом."""
+class SubscriptionNotActiveException(BusinessException):
+    """Подписка не активна."""
 
     pass
 
 
-class ReferralCodeGenerationException(UserException):
+class SubscriptionNotFoundException(BusinessException):
+    """Подписка не найдена."""
+
+    pass
+
+
+class PaymentNotFoundException(BusinessException):
+    """Платеж не найден."""
+
+    pass
+
+
+class ReferralCodeGenerationException(BusinessException):
     """Все попытки создания кода неудачны."""
 
     pass
 
 
-# === Subscription domain ===
+class TrialAlreadyUsedException(BusinessException):
+    """Пробный период уже использован."""
 
-
-class SubscriptionException(ServiceException):
-    """Ошибки для SubscriptionService."""
-
-    pass
-
-
-class SubscriptionNotActiveException(SubscriptionException):
-    """Подписка не активна у пользователя."""
-
-    pass
-
-
-class SubscriptionNotFoundException(SubscriptionException):
-    """Подписка не найдена для пользователя."""
-
-    pass
-
-
-# === Payment domain ===
-
-
-class PaymentException(ServiceException):
-    """Ошибки для PaymentService."""
-
-    pass
-
-
-class TariffNotFoundException(PaymentException):
-    pass
-
-
-class PaymentNotFoundException(PaymentException):
     pass

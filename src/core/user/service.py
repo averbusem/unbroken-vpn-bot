@@ -12,6 +12,7 @@ from src.exceptions import (
     SelfReferralException,
     ServiceException,
     SubscriptionAlreadyExistException,
+    UserException,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ class UserService:
             raise
         except Exception as e:
             logger.exception(f"Unhandled exception in UserService.start for user {user_id}: {e}")
-            raise ServiceException(f"Failed to start user {user_id}: {str(e)}")
+            raise UserException(f"Failed to start user {user_id}: {str(e)}")
 
     async def _apply_referral(self, user_id: int, ref_code: str) -> bool:
         existing_sub = await self.sub_service.sub_repo.get_by_user_id(user_id)
