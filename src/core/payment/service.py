@@ -8,8 +8,13 @@ from src.core.payment.models import PaymentStatus
 from src.core.payment.repository import PaymentRepository
 from src.core.subscription.service import SubscriptionService
 from src.core.tariff.repository import TariffRepository
-from src.db.database import session_factory
-from src.exceptions import PaymentNotFoundException, TariffNotFoundException
+from src.database import session_factory
+from src.exceptions import (
+    PaymentException,
+    PaymentNotFoundException,
+    ServiceException,
+    TariffNotFoundException,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +30,20 @@ class PaymentService:
         user_id: int,
         tariff_id: int,
     ) -> Dict[str, Any]:
+        """
+        Создает инвойс для платежа.
+
+        Args:
+            user_id: ID пользователя
+            tariff_id: ID тарифа
+
+        Returns:
+            Dict: Данные инвойса
+
+        Raises:
+            TariffNotFoundException: Если тариф не найден
+            PaymentException: При других ошибках создания инвойса
+        """
         try:
             tariff = await self.tariff_repo.get_by_id(tariff_id)
             if not tariff:
@@ -56,6 +75,9 @@ class PaymentService:
             }
         except TariffNotFoundException:
             raise
+        except Exception as e:
+            logger.exception(f"Unhandled exception in create_invoice for user {user_id}: {e}")
+            raise PaymentException(f"Failed to create invoice for user {user_id}: {str(e)}")
 
     async def process_success(
         self,
@@ -65,7 +87,19 @@ class PaymentService:
     ):
         """
         Обрабатывает успешный платеж по payment_id: обновляет статус, создает/продлевает подписку.
-        Возвращает (action, end_datetime, vpn_key).
+
+        Args:
+            payment_id: ID платежа
+            telegram_charge_id: ID платежа в Telegram
+            provider_charge_id: ID платежа у провайдера
+
+        Returns:
+            tuple: (action, end_datetime, vpn_key)
+
+        Raises:
+            PaymentNotFoundException: Если платеж не найден
+            TariffNotFoundException: Если тариф не найден при создании подписки
+            PaymentException: При других ошибках обработки платежа
         """
         try:
             # Создание отдельной сессии для успешного платежа (иначе в middleware может быть откат)
@@ -93,5 +127,13 @@ class PaymentService:
             action = "продлена" if existing_sub else "создана"
 
             return action, sub.end_date, key
-        except (PaymentNotFoundException,):
+
+        except (PaymentNotFoundException, TariffNotFoundException):
             raise
+        except ServiceException:
+            raise
+        except Exception as e:
+            logger.exception(
+                f"Unhandled exception in process_success for payment {payment_id}: {e}"
+            )
+            raise PaymentException(f"Failed to process successful payment {payment_id}: {str(e)}")

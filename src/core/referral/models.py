@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, Integer, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.db.database import Base
+from src.database import Base
 
 if TYPE_CHECKING:
     from src.core.user.models import User

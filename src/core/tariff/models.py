@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from sqlalchemy import Boolean, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.db.database import Base
+from src.database import Base
 
 if TYPE_CHECKING:
     # Эти импорты нужны только для проверки типов (flake8),

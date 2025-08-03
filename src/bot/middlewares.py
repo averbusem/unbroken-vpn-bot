@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
 from src.bot.keyboards import back_to_main_kb
-from src.db.database import session_factory
+from src.database import session_factory
 from src.exceptions import ServiceException
 
 logger = logging.getLogger(__name__)

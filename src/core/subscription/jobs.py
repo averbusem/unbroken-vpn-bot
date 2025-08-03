@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 
 from src.core.subscription.scheduler import scheduler
-from src.db.database import session_factory
+from src.database import session_factory
 from src.exceptions import ServiceException
 
 logger = logging.getLogger(__name__)

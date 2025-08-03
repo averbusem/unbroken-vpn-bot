@@ -9,7 +9,7 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.db.database import Base
+from src.database import Base
 
 if TYPE_CHECKING:
     from src.core.tariff.models import Tariff

@@ -3,7 +3,7 @@ import json
 import pytest
 
 from src.config import settings
-from src.db.database import Base, engine
+from src.database import Base, engine
 
 
 @pytest.fixture(scope="session", autouse=True)

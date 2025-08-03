@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.referral.repository import ReferralRepository
 from src.core.user.repository import UserRepository
-from src.exceptions import ServiceException, UserNotFoundException
+from src.exceptions import ReferralException, UserNotFoundException
 
 logger = logging.getLogger(__name__)
 
@@ -53,4 +53,4 @@ class ReferralService:
             logger.exception(
                 f"Unhandled exception in ReferralService.get_info for user {user_id}: {e}"
             )
-            raise ServiceException(f"Failed to get referral info for user {user_id}: {str(e)}")
+            raise ReferralException(f"Failed to get referral info for user {user_id}: {str(e)}")
