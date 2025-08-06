@@ -17,6 +17,8 @@ async def main_menu(callback: CallbackQuery, state: FSMContext, session: AsyncSe
     user_repo = UserRepository(session)
     user = await user_repo.get_by_id(user_id)
     return await callback.message.edit_text(
+        "<b>Внимание!</b>\n"
+        "Этот бот — учебный пет-проект и не предназначен для реальной эксплуатации.\n"
         "Главное меню:",
         reply_markup=main_menu_kb(user.trial_used),
     )

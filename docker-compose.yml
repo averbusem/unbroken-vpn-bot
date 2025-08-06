@@ -23,10 +23,11 @@ services:
       - redis-server
       - "--appendonly yes"
       - "--requirepass ${REDIS_PASSWORD}"
-    volumes:
-      - redis_data:/data
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 
   bot:
     build:
