@@ -108,8 +108,8 @@ class SubscriptionService:
         outline_key = await self.outline.create_key(name=f"user_{user_id}")
 
         end_date = datetime.now(timezone.utc) + timedelta(days=tariff.duration_days)
-
-        # Создаем подписку
+        # TODO если создали в первый раз подписку, но не пробовали пробный период, нужно увеличивать
+        # cnt_payments
         subscription = await self.sub_repo.create(
             user_id=user_id,
             tariff_id=tariff_id,
