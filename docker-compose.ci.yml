@@ -1,0 +1,34 @@
+services:
+  test_db:
+    image: postgres:17.5
+    env_file:
+      - .env
+    environment:
+      - MODE=TEST
+      - POSTGRES_USER=${TEST_DB_USER}
+      - POSTGRES_PASSWORD=${TEST_DB_PASS}
+      - POSTGRES_DB=${TEST_DB_NAME}
+
+  test_redis:
+    image: redis:8.0.2
+    env_file:
+      - .env
+    environment:
+      - MODE=TEST
+    command:
+      - redis-server
+      - "--appendonly yes"
+      - "--requirepass ${TEST_REDIS_PASSWORD}"
+
+  test_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    env_file:
+      - .env
+    environment:
+      - MODE=TEST
+    depends_on:
+      - test_db
+      - test_redis
+    command: ["pytest", "-s", "--maxfail=1"]
