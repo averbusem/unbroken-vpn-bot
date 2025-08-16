@@ -1,4 +1,4 @@
-name: CI — tests
+name: CI/CD Pipeline
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   tests:
-    name: Run tests (docker-compose.ci.yml)
+    name: Run tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -45,4 +45,36 @@ jobs:
           rm -f .env || true
 
           exit $EXIT_CODE
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            PROJECT_DIR=${{ secrets.PROJECT_DIR }}
+
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo "ERROR: project dir $PROJECT_DIR not found. Please clone repository on server first."
+              exit 1
+            fi
+
+            cd "$PROJECT_DIR"
+
+            git fetch --all --prune
+            git reset --hard origin/main
+            git clean -fd
+
+            docker compose -f docker-compose.yml up -d --build --force-recreate --remove-orphans
+
+            docker compose ps
 
